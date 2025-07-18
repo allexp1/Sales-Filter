@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+
+{% block title %}Processing History - Sales Filter{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">Processing History</h1>
+                <p class="text-gray-600">View all your processed files and results</p>
+            </div>
+            <div>
+                <a href="{{ url_for('upload') }}" class="btn-primary">
+                    <i class="fas fa-upload mr-2"></i>
+                    Upload New File
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="bg-white rounded-lg shadow">
+        {% if sessions %}
+        <div class="divide-y divide-gray-200">
+            {% for session in sessions %}
+            <div class="p-6 hover:bg-gray-50">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-shrink-0">
+                            {% if session.status == 'completed' %}
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-check text-green-600"></i>
+                                </div>
+                            {% elif session.status == 'processing' %}
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-spinner fa-spin text-blue-600"></i>
+                                </div>
+                            {% elif session.status == 'failed' %}
+                                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-times text-red-600"></i>
+                                </div>
+                            {% else %}
+                                <div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+                                    <i class="fas fa-clock text-gray-600"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900">{{ session.filename }}</h3>
+                            <div class="flex items-center space-x-4 text-sm text-gray-600">
+                                <span>{{ session.upload_time.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                                {% if session.total_rows > 0 %}
+                                    <span>{{ session.total_rows }} leads</span>
+                                {% endif %}
+                                {% if session.avg_score > 0 %}
+                                    <span>Avg Score: {{ "%.1f"|format(session.avg_score) }}</span>
+                                {% endif %}
+                                {% if session.business_domains_count > 0 %}
+                                    <span>{{ session.business_domains_count }} business domains</span>
+                                {% endif %}
+                            </div>
+                            {% if session.date_from or session.date_to %}
+                            <div class="flex items-center space-x-2 text-sm text-blue-600 mt-1">
+                                <i class="fas fa-calendar-alt"></i>
+                                <span>
+                                    {% if session.date_from and session.date_to %}
+                                        {{ session.date_from }} to {{ session.date_to }}
+                                    {% elif session.date_from %}
+                                        From {{ session.date_from }}
+                                    {% else %}
+                                        Until {{ session.date_to }}
+                                    {% endif %}
+                                </span>
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span class="px-3 py-1 text-xs rounded-full font-medium
+                            {% if session.status == 'completed' %}bg-green-100 text-green-800
+                            {% elif session.status == 'processing' %}bg-blue-100 text-blue-800
+                            {% elif session.status == 'failed' %}bg-red-100 text-red-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ session.status.title() }}
+                        </span>
+                        <div class="flex items-center space-x-2">
+                            {% if session.status == 'completed' %}
+                                <a href="{{ url_for('session_details', session_id=session.id) }}" 
+                                   class="text-blue-600 hover:text-blue-800" title="View Details">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a href="{{ url_for('download_results', session_id=session.id) }}" 
+                                   class="text-green-600 hover:text-green-800" title="Download Results">
+                                    <i class="fas fa-download"></i>
+                                </a>
+                            {% elif session.status == 'processing' %}
+                                <a href="{{ url_for('processing', session_id=session.id) }}" 
+                                   class="text-blue-600 hover:text-blue-800" title="View Progress">
+                                    <i class="fas fa-chart-line"></i>
+                                </a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-12 text-center text-gray-500">
+            <i class="fas fa-inbox text-6xl mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">No processing sessions yet</h3>
+            <p class="text-gray-600 mb-6">Upload your first Excel file to get started with lead scoring</p>
+            <a href="{{ url_for('upload') }}" class="btn-primary">
+                <i class="fas fa-upload mr-2"></i>
+                Upload Your First File
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Summary Statistics -->
+    {% if sessions %}
+    <div class="bg-white rounded-lg shadow p-6">
+        <h2 class="text-lg font-semibold text-gray-900 mb-4">Summary Statistics</h2>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+            <div class="p-4 bg-blue-50 rounded-lg">
+                <p class="text-2xl font-bold text-blue-600">{{ sessions|length }}</p>
+                <p class="text-sm text-blue-800">Total Sessions</p>
+            </div>
+            <div class="p-4 bg-green-50 rounded-lg">
+                <p class="text-2xl font-bold text-green-600">{{ sessions|selectattr('status', 'equalto', 'completed')|list|length }}</p>
+                <p class="text-sm text-green-800">Completed</p>
+            </div>
+            <div class="p-4 bg-purple-50 rounded-lg">
+                <p class="text-2xl font-bold text-purple-600">{{ sessions|sum(attribute='total_rows') }}</p>
+                <p class="text-sm text-purple-800">Total Leads</p>
+            </div>
+            <div class="p-4 bg-orange-50 rounded-lg">
+                <p class="text-2xl font-bold text-orange-600">{{ sessions|sum(attribute='business_domains_count') }}</p>
+                <p class="text-sm text-orange-800">Business Domains</p>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

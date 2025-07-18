@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Processing - Sales Filter{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Processing Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="text-center">
+            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
+                <i class="fas fa-cog fa-spin text-blue-600 text-xl"></i>
+            </div>
+            <h1 class="mt-4 text-2xl font-bold text-gray-900">Processing Your File</h1>
+            <p class="mt-2 text-gray-600">{{ session.filename }}</p>
+        </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="mb-4">
+            <div class="flex justify-between text-sm text-gray-600 mb-2">
+                <span>Progress</span>
+                <span id="progress-text">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-3">
+                <div id="progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+            </div>
+        </div>
+        
+        <div class="text-center">
+            <p id="status-message" class="text-gray-700 mb-4">Initializing processing...</p>
+            <div id="processing-stats" class="hidden">
+                <div class="grid grid-cols-3 gap-4 text-sm">
+                    <div class="text-center">
+                        <p class="text-gray-600">Total Rows</p>
+                        <p id="total-rows" class="text-lg font-semibold text-gray-900">-</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-600">Processed</p>
+                        <p id="processed-rows" class="text-lg font-semibold text-blue-600">-</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-gray-600">Remaining</p>
+                        <p id="remaining-rows" class="text-lg font-semibold text-gray-600">-</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Processing Logs -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Processing Logs</h2>
+        </div>
+        <div class="p-6">
+            <div id="logs-container" class="space-y-2 max-h-64 overflow-y-auto">
+                <!-- Logs will be populated here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <p class="text-sm text-gray-600">Session ID: {{ session.id }}</p>
+                <p class="text-sm text-gray-600">Started: {{ session.upload_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+            </div>
+            <div class="space-x-4">
+                <a href="{{ url_for('history') }}" class="btn-secondary">
+                    <i class="fas fa-history mr-2"></i>
+                    View History
+                </a>
+                <button id="download-btn" class="btn-primary hidden">
+                    <i class="fas fa-download mr-2"></i>
+                    Download Results
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Server-Sent Events for real-time updates
+const eventSource = new EventSource('/progress/stream/{{ session.id }}');
+const progressBar = document.getElementById('progress-bar');
+const progressText = document.getElementById('progress-text');
+const statusMessage = document.getElementById('status-message');
+const logsContainer = document.getElementById('logs-container');
+const downloadBtn = document.getElementById('download-btn');
+const processingStats = document.getElementById('processing-stats');
+const totalRowsEl = document.getElementById('total-rows');
+const processedRowsEl = document.getElementById('processed-rows');
+const remainingRowsEl = document.getElementById('remaining-rows');
+
+let totalRows = 0;
+let processedRows = 0;
+
+eventSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    
+    // Update progress bar
+    const progress = Math.round(data.progress || 0);
+    progressBar.style.width = progress + '%';
+    progressText.textContent = progress + '%';
+    
+    // Update status message
+    if (data.message) {
+        statusMessage.textContent = data.message;
+    }
+    
+    // Update processing stats
+    if (data.total_rows) {
+        totalRows = data.total_rows;
+        totalRowsEl.textContent = totalRows;
+        processingStats.classList.remove('hidden');
+    }
+    
+    if (data.processed_rows) {
+        processedRows = data.processed_rows;
+        processedRowsEl.textContent = processedRows;
+        remainingRowsEl.textContent = totalRows - processedRows;
+    }
+    
+    // Add log entry
+    if (data.message) {
+        const logEntry = document.createElement('div');
+        logEntry.className = 'flex items-start space-x-2 text-sm';
+        
+        const timestamp = new Date().toLocaleTimeString();
+        const level = data.level || 'info';
+        const levelColor = {
+            'info': 'text-blue-600',
+            'warning': 'text-yellow-600',
+            'error': 'text-red-600',
+            'success': 'text-green-600'
+        }[level] || 'text-gray-600';
+        
+        logEntry.innerHTML = `
+            <span class="text-gray-500 w-16">${timestamp}</span>
+            <span class="${levelColor} w-16 uppercase text-xs font-medium">${level}</span>
+            <span class="text-gray-700 flex-1">${data.message}</span>
+        `;
+        
+        logsContainer.appendChild(logEntry);
+        logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+    
+    // Handle completion
+    if (data.status === 'completed') {
+        eventSource.close();
+        progressBar.classList.add('bg-green-600');
+        statusMessage.textContent = 'Processing completed successfully!';
+        statusMessage.className = 'text-green-700 font-medium mb-4';
+        downloadBtn.classList.remove('hidden');
+        downloadBtn.onclick = function() {
+            window.location.href = '/download/{{ session.id }}';
+        };
+        
+        // Add completion log
+        const completionLog = document.createElement('div');
+        completionLog.className = 'flex items-start space-x-2 text-sm bg-green-50 p-2 rounded';
+        completionLog.innerHTML = `
+            <span class="text-gray-500 w-16">${new Date().toLocaleTimeString()}</span>
+            <span class="text-green-600 w-16 uppercase text-xs font-medium">SUCCESS</span>
+            <span class="text-green-700 flex-1 font-medium">Processing completed! Results are ready for download.</span>
+        `;
+        logsContainer.appendChild(completionLog);
+        logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+    
+    if (data.status === 'failed') {
+        eventSource.close();
+        progressBar.classList.add('bg-red-600');
+        statusMessage.textContent = 'Processing failed. Please try again.';
+        statusMessage.className = 'text-red-700 font-medium mb-4';
+        
+        // Add failure log
+        const failureLog = document.createElement('div');
+        failureLog.className = 'flex items-start space-x-2 text-sm bg-red-50 p-2 rounded';
+        failureLog.innerHTML = `
+            <span class="text-gray-500 w-16">${new Date().toLocaleTimeString()}</span>
+            <span class="text-red-600 w-16 uppercase text-xs font-medium">ERROR</span>
+            <span class="text-red-700 flex-1 font-medium">Processing failed. Please check your file and try again.</span>
+        `;
+        logsContainer.appendChild(failureLog);
+        logsContainer.scrollTop = logsContainer.scrollHeight;
+    }
+};
+
+eventSource.onerror = function(event) {
+    console.error('EventSource failed:', event);
+    eventSource.close();
+    statusMessage.textContent = 'Connection lost. Please refresh the page.';
+    statusMessage.className = 'text-red-700 font-medium mb-4';
+};
+
+// Handle page unload
+window.addEventListener('beforeunload', function() {
+    eventSource.close();
+});
+</script>
+{% endblock %}

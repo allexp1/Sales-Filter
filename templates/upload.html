@@ -1,0 +1,180 @@
+{% extends "base.html" %}
+
+{% block title %}Upload File - Sales Filter{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Page Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="text-center">
+            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
+                <i class="fas fa-upload text-blue-600 text-xl"></i>
+            </div>
+            <h1 class="mt-4 text-2xl font-bold text-gray-900">Upload Excel File</h1>
+            <p class="mt-2 text-gray-600">Upload your leads file for scoring and filtering</p>
+        </div>
+    </div>
+
+    <!-- Upload Form -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+            {{ form.hidden_tag() }}
+            
+            <!-- File Upload -->
+            <div>
+                {{ form.file.label(class="block text-sm font-medium text-gray-700 mb-2") }}
+                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-lg hover:border-gray-400 transition-colors">
+                    <div class="space-y-1 text-center">
+                        <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl"></i>
+                        <div class="flex text-sm text-gray-600">
+                            <label for="{{ form.file.id }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                                <span>Upload a file</span>
+                                {{ form.file(class="sr-only", id="file-upload", onchange="updateFileName(this)") }}
+                            </label>
+                            <p class="pl-1">or drag and drop</p>
+                        </div>
+                        <p class="text-xs text-gray-500">Excel files only (.xlsx)</p>
+                        <p id="file-name" class="text-sm text-gray-700 font-medium hidden"></p>
+                    </div>
+                </div>
+                {% if form.file.errors %}
+                    <div class="mt-2 text-sm text-red-600">
+                        {% for error in form.file.errors %}
+                            <p>{{ error }}</p>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Date Range Filter -->
+            <div class="border-t pt-6">
+                <h3 class="text-lg font-medium text-gray-900 mb-4">Date Range Filter (Optional)</h3>
+                <p class="text-sm text-gray-600 mb-4">
+                    Filter records by date range. If specified, only records within this range will be processed.
+                </p>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        {{ form.date_from.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ form.date_from(class="form-input") }}
+                        {% if form.date_from.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.date_from.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div>
+                        {{ form.date_to.label(class="block text-sm font-medium text-gray-700") }}
+                        {{ form.date_to(class="form-input") }}
+                        {% if form.date_to.errors %}
+                            <div class="mt-1 text-sm text-red-600">
+                                {% for error in form.date_to.errors %}
+                                    <p>{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="border-t pt-6">
+                {{ form.submit(class="w-full btn-primary text-center") }}
+            </div>
+        </form>
+    </div>
+
+    <!-- File Requirements -->
+    <div class="bg-blue-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-blue-900 mb-3">
+            <i class="fas fa-info-circle mr-2"></i>File Requirements
+        </h3>
+        <ul class="text-sm text-blue-800 space-y-2">
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>Excel file format (.xlsx) only</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>Required columns: <code class="bg-blue-100 px-1 rounded">name</code>, <code class="bg-blue-100 px-1 rounded">email</code>, <code class="bg-blue-100 px-1 rounded">date</code></span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>Maximum file size: 16MB</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>Date format: YYYY-MM-DD or MM/DD/YYYY</span>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Processing Information -->
+    <div class="bg-gray-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-3">
+            <i class="fas fa-cogs mr-2"></i>What We'll Do
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
+            <div>
+                <h4 class="font-medium text-gray-900 mb-2">Data Enhancement</h4>
+                <ul class="space-y-1">
+                    <li>• Extract email domains</li>
+                    <li>• Identify industries</li>
+                    <li>• Validate domain types</li>
+                    <li>• Check name/email matching</li>
+                </ul>
+            </div>
+            <div>
+                <h4 class="font-medium text-gray-900 mb-2">Scoring System</h4>
+                <ul class="space-y-1">
+                    <li>• Telecom domains: +50 points</li>
+                    <li>• Enterprise domains: +30 points</li>
+                    <li>• Free providers: -30 points</li>
+                    <li>• Name matching: +5 points</li>
+                    <li>• TLD bonus: +10 points</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function updateFileName(input) {
+    const fileName = document.getElementById('file-name');
+    if (input.files && input.files[0]) {
+        fileName.textContent = input.files[0].name;
+        fileName.classList.remove('hidden');
+    } else {
+        fileName.classList.add('hidden');
+    }
+}
+
+// Drag and drop functionality
+const dropZone = document.querySelector('.border-dashed');
+const fileInput = document.getElementById('file-upload');
+
+dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('border-blue-400', 'bg-blue-50');
+});
+
+dropZone.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+});
+
+dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('border-blue-400', 'bg-blue-50');
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+        fileInput.files = files;
+        updateFileName(fileInput);
+    }
+});
+</script>
+{% endblock %}
