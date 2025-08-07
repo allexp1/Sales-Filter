@@ -5,74 +5,121 @@
 {% block content %}
 <div class="max-w-2xl mx-auto space-y-6">
     <!-- Processing Header -->
-    <div class="bg-white rounded-lg shadow p-6">
+    <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8">
         <div class="text-center">
-            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-                <i class="fas fa-cog fa-spin text-blue-600 text-xl"></i>
+            <!-- Modern Animated Spinner -->
+            <div class="mx-auto h-20 w-20 relative mb-6">
+                <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full animate-ping opacity-20"></div>
+                <div class="relative h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-blue-50 to-purple-50">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+                </div>
             </div>
-            <h1 class="mt-4 text-2xl font-bold text-gray-900">Processing Your File</h1>
-            <p class="mt-2 text-gray-600">{{ session.filename }}</p>
+            <h1 class="text-3xl font-bold text-gray-900">Processing Your File</h1>
+            <p class="mt-2 text-lg text-gray-600">{{ session.filename }}</p>
         </div>
     </div>
 
-    <!-- Progress Bar -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="mb-4">
-            <div class="flex justify-between text-sm text-gray-600 mb-2">
-                <span>Progress</span>
-                <span id="progress-text">0%</span>
+    <!-- Modern Progress Section -->
+    <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8">
+        <!-- Progress Bar with Gradient -->
+        <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-sm font-medium text-gray-700">Processing Progress</span>
+                <div class="flex items-center space-x-3">
+                    <span id="progress-text" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">0%</span>
+                    <span id="time-estimate" class="text-sm text-gray-500 hidden">
+                        <i class="fas fa-clock mr-1"></i>
+                        <span id="time-remaining">Calculating...</span>
+                    </span>
+                </div>
             </div>
-            <div class="w-full bg-gray-200 rounded-full h-3">
-                <div id="progress-bar" class="bg-blue-600 h-3 rounded-full transition-all duration-300 ease-out" style="width: 0%"></div>
+            <div class="relative">
+                <div class="w-full bg-gray-100 rounded-full h-4 overflow-hidden">
+                    <div id="progress-bar" class="h-full rounded-full bg-gradient-to-r from-blue-500 to-purple-600 transition-all duration-500 ease-out relative" style="width: 0%">
+                        <div class="absolute inset-0 bg-white/20 animate-pulse"></div>
+                    </div>
+                </div>
+                <!-- Progress indicator dot -->
+                <div id="progress-dot" class="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-white border-4 border-purple-600 rounded-full shadow-lg transition-all duration-500 ease-out" style="left: -12px;"></div>
             </div>
         </div>
         
-        <div class="text-center">
-            <p id="status-message" class="text-gray-700 mb-4">Initializing processing...</p>
-            <div id="processing-stats" class="hidden">
-                <div class="grid grid-cols-3 gap-4 text-sm">
-                    <div class="text-center">
-                        <p class="text-gray-600">Total Rows</p>
-                        <p id="total-rows" class="text-lg font-semibold text-gray-900">-</p>
+        <!-- Status Message with Icon -->
+        <div class="text-center mb-6">
+            <div class="inline-flex items-center space-x-2 px-4 py-2 bg-blue-50 rounded-full">
+                <div class="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                <p id="status-message" class="text-sm font-medium text-blue-700">Initializing processing...</p>
+            </div>
+        </div>
+
+        <!-- Processing Statistics Cards -->
+        <div id="processing-stats" class="hidden">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-4 text-center">
+                    <div class="inline-flex items-center justify-center w-10 h-10 bg-white rounded-lg mb-2">
+                        <i class="fas fa-database text-gray-600"></i>
                     </div>
-                    <div class="text-center">
-                        <p class="text-gray-600">Processed</p>
-                        <p id="processed-rows" class="text-lg font-semibold text-blue-600">-</p>
+                    <p class="text-xs font-medium text-gray-600 uppercase tracking-wider">Total Rows</p>
+                    <p id="total-rows" class="text-2xl font-bold text-gray-900 mt-1">-</p>
+                </div>
+                <div class="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 text-center">
+                    <div class="inline-flex items-center justify-center w-10 h-10 bg-white rounded-lg mb-2">
+                        <i class="fas fa-check-circle text-blue-600"></i>
                     </div>
-                    <div class="text-center">
-                        <p class="text-gray-600">Remaining</p>
-                        <p id="remaining-rows" class="text-lg font-semibold text-gray-600">-</p>
+                    <p class="text-xs font-medium text-gray-600 uppercase tracking-wider">Processed</p>
+                    <p id="processed-rows" class="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mt-1">-</p>
+                </div>
+                <div class="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 text-center">
+                    <div class="inline-flex items-center justify-center w-10 h-10 bg-white rounded-lg mb-2">
+                        <i class="fas fa-hourglass-half text-orange-600"></i>
                     </div>
+                    <p class="text-xs font-medium text-gray-600 uppercase tracking-wider">Remaining</p>
+                    <p id="remaining-rows" class="text-2xl font-bold text-orange-600 mt-1">-</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Processing Logs -->
-    <div class="bg-white rounded-lg shadow">
-        <div class="px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Processing Logs</h2>
+    <!-- Processing Logs with Modern Design -->
+    <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50">
+        <div class="px-6 py-4 border-b border-gray-100">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900">
+                    <i class="fas fa-terminal mr-2 text-gray-600"></i>
+                    Processing Logs
+                </h2>
+                <button onclick="toggleLogs()" class="text-sm text-gray-500 hover:text-gray-700 transition-colors">
+                    <i class="fas fa-chevron-down mr-1" id="logs-toggle-icon"></i>
+                    <span id="logs-toggle-text">Show</span>
+                </button>
+            </div>
         </div>
-        <div class="p-6">
-            <div id="logs-container" class="space-y-2 max-h-64 overflow-y-auto">
+        <div id="logs-section" class="hidden p-6 bg-gray-50">
+            <div id="logs-container" class="space-y-2 max-h-64 overflow-y-auto font-mono text-xs bg-white rounded-lg p-4 border border-gray-200">
                 <!-- Logs will be populated here -->
             </div>
         </div>
     </div>
 
-    <!-- Actions -->
-    <div class="bg-white rounded-lg shadow p-6">
-        <div class="flex justify-between items-center">
-            <div>
-                <p class="text-sm text-gray-600">Session ID: {{ session.id }}</p>
-                <p class="text-sm text-gray-600">Started: {{ session.upload_time.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+    <!-- Actions with Modern Design -->
+    <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-6">
+        <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+            <div class="text-center md:text-left">
+                <p class="text-sm text-gray-600">
+                    <i class="fas fa-fingerprint mr-1 text-gray-400"></i>
+                    Session ID: <span class="font-medium">{{ session.id }}</span>
+                </p>
+                <p class="text-sm text-gray-600">
+                    <i class="fas fa-clock mr-1 text-gray-400"></i>
+                    Started: <span class="font-medium">{{ session.upload_time.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                </p>
             </div>
-            <div class="space-x-4">
-                <a href="{{ url_for('history') }}" class="btn-secondary">
+            <div class="flex space-x-4">
+                <a href="{{ url_for('history') }}" class="btn-secondary rounded-xl hover:scale-105 transition-transform">
                     <i class="fas fa-history mr-2"></i>
                     View History
                 </a>
-                <button id="download-btn" class="btn-primary hidden">
+                <button id="download-btn" class="btn-primary rounded-xl hidden hover:scale-105 transition-transform bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                     <i class="fas fa-download mr-2"></i>
                     Download Results
                 </button>
@@ -81,10 +128,63 @@
     </div>
 </div>
 
+<style>
+/* Additional animations for modern look */
+@keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.animate-shimmer {
+    background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.3) 50%, transparent 100%);
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+}
+
+/* Custom scrollbar for logs */
+#logs-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+#logs-container::-webkit-scrollbar-track {
+    background: #f3f4f6;
+    border-radius: 3px;
+}
+
+#logs-container::-webkit-scrollbar-thumb {
+    background: #d1d5db;
+    border-radius: 3px;
+}
+
+#logs-container::-webkit-scrollbar-thumb:hover {
+    background: #9ca3af;
+}
+</style>
+
 <script>
+// Toggle logs visibility
+function toggleLogs() {
+    const logsSection = document.getElementById('logs-section');
+    const toggleIcon = document.getElementById('logs-toggle-icon');
+    const toggleText = document.getElementById('logs-toggle-text');
+    
+    if (logsSection.classList.contains('hidden')) {
+        logsSection.classList.remove('hidden');
+        toggleIcon.classList.remove('fa-chevron-down');
+        toggleIcon.classList.add('fa-chevron-up');
+        toggleText.textContent = 'Hide';
+    } else {
+        logsSection.classList.add('hidden');
+        toggleIcon.classList.remove('fa-chevron-up');
+        toggleIcon.classList.add('fa-chevron-down');
+        toggleText.textContent = 'Show';
+    }
+}
+
 // Server-Sent Events for real-time updates
 const eventSource = new EventSource('/progress/stream/{{ session.id }}');
 const progressBar = document.getElementById('progress-bar');
+const progressDot = document.getElementById('progress-dot');
 const progressText = document.getElementById('progress-text');
 const statusMessage = document.getElementById('status-message');
 const logsContainer = document.getElementById('logs-container');
@@ -93,17 +193,32 @@ const processingStats = document.getElementById('processing-stats');
 const totalRowsEl = document.getElementById('total-rows');
 const processedRowsEl = document.getElementById('processed-rows');
 const remainingRowsEl = document.getElementById('remaining-rows');
+const timeEstimate = document.getElementById('time-estimate');
+const timeRemaining = document.getElementById('time-remaining');
 
 let totalRows = 0;
 let processedRows = 0;
+let startTime = Date.now();
+let lastUpdateTime = Date.now();
 
 eventSource.onmessage = function(event) {
     const data = JSON.parse(event.data);
     
-    // Update progress bar
+    // Update progress bar with smooth animation
     const progress = Math.round(data.progress || 0);
     progressBar.style.width = progress + '%';
+    progressDot.style.left = `calc(${progress}% - 12px)`;
     progressText.textContent = progress + '%';
+    
+    // Calculate and show time estimate
+    if (progress > 5 && progress < 100) {
+        const elapsedTime = Date.now() - startTime;
+        const estimatedTotal = (elapsedTime / progress) * 100;
+        const remainingTime = estimatedTotal - elapsedTime;
+        
+        timeEstimate.classList.remove('hidden');
+        timeRemaining.textContent = formatTime(remainingTime);
+    }
     
     // Update status message
     if (data.message) {
@@ -123,69 +238,109 @@ eventSource.onmessage = function(event) {
         remainingRowsEl.textContent = totalRows - processedRows;
     }
     
-    // Add log entry
+    // Add log entry with better styling
     if (data.message) {
         const logEntry = document.createElement('div');
-        logEntry.className = 'flex items-start space-x-2 text-sm';
+        logEntry.className = 'flex items-start space-x-2 py-1 hover:bg-gray-50 rounded px-2 transition-colors';
         
         const timestamp = new Date().toLocaleTimeString();
         const level = data.level || 'info';
-        const levelColor = {
-            'info': 'text-blue-600',
-            'warning': 'text-yellow-600',
-            'error': 'text-red-600',
-            'success': 'text-green-600'
-        }[level] || 'text-gray-600';
+        const levelStyles = {
+            'info': { color: 'text-blue-600', bg: 'bg-blue-50', icon: 'fa-info-circle' },
+            'warning': { color: 'text-yellow-600', bg: 'bg-yellow-50', icon: 'fa-exclamation-triangle' },
+            'error': { color: 'text-red-600', bg: 'bg-red-50', icon: 'fa-times-circle' },
+            'success': { color: 'text-green-600', bg: 'bg-green-50', icon: 'fa-check-circle' }
+        }[level] || { color: 'text-gray-600', bg: 'bg-gray-50', icon: 'fa-circle' };
         
         logEntry.innerHTML = `
-            <span class="text-gray-500 w-16">${timestamp}</span>
-            <span class="${levelColor} w-16 uppercase text-xs font-medium">${level}</span>
+            <span class="text-gray-400 w-20 shrink-0">${timestamp}</span>
+            <span class="${levelStyles.bg} ${levelStyles.color} px-2 py-0.5 rounded text-xs font-medium uppercase w-20 text-center shrink-0">
+                <i class="fas ${levelStyles.icon} mr-1 text-xs"></i>${level}
+            </span>
             <span class="text-gray-700 flex-1">${data.message}</span>
         `;
         
         logsContainer.appendChild(logEntry);
         logsContainer.scrollTop = logsContainer.scrollHeight;
+        
+        // Auto-show logs on first message
+        if (logsContainer.children.length === 1) {
+            toggleLogs();
+        }
     }
     
     // Handle completion
     if (data.status === 'completed') {
         eventSource.close();
-        progressBar.classList.add('bg-green-600');
+        progressBar.classList.remove('from-blue-500', 'to-purple-600');
+        progressBar.classList.add('from-green-500', 'to-green-600');
+        statusMessage.parentElement.classList.remove('bg-blue-50');
+        statusMessage.parentElement.classList.add('bg-green-50');
+        statusMessage.classList.remove('text-blue-700');
+        statusMessage.classList.add('text-green-700');
         statusMessage.textContent = 'Processing completed successfully!';
-        statusMessage.className = 'text-green-700 font-medium mb-4';
+        
+        // Hide spinner and show checkmark
+        const headerIcon = document.querySelector('.animate-spin').parentElement.parentElement;
+        headerIcon.innerHTML = `
+            <div class="relative h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-green-50 to-green-100">
+                <i class="fas fa-check-circle text-4xl text-green-600"></i>
+            </div>
+        `;
+        
         downloadBtn.classList.remove('hidden');
         downloadBtn.onclick = function() {
-            window.location.href = '/download/{{ session.id }}';
+            window.location.href = '{{ url_for("download_results", session_id=session.id, _external=True) }}';
         };
         
         // Add completion log
         const completionLog = document.createElement('div');
-        completionLog.className = 'flex items-start space-x-2 text-sm bg-green-50 p-2 rounded';
+        completionLog.className = 'flex items-start space-x-2 py-2 bg-green-50 rounded px-2 mt-2';
         completionLog.innerHTML = `
-            <span class="text-gray-500 w-16">${new Date().toLocaleTimeString()}</span>
-            <span class="text-green-600 w-16 uppercase text-xs font-medium">SUCCESS</span>
+            <span class="text-gray-400 w-20 shrink-0">${new Date().toLocaleTimeString()}</span>
+            <span class="bg-green-100 text-green-600 px-2 py-0.5 rounded text-xs font-medium uppercase w-20 text-center shrink-0">
+                <i class="fas fa-check-circle mr-1 text-xs"></i>SUCCESS
+            </span>
             <span class="text-green-700 flex-1 font-medium">Processing completed! Results are ready for download.</span>
         `;
         logsContainer.appendChild(completionLog);
         logsContainer.scrollTop = logsContainer.scrollHeight;
+        
+        timeEstimate.classList.add('hidden');
     }
     
     if (data.status === 'failed') {
         eventSource.close();
-        progressBar.classList.add('bg-red-600');
+        progressBar.classList.remove('from-blue-500', 'to-purple-600');
+        progressBar.classList.add('from-red-500', 'to-red-600');
+        statusMessage.parentElement.classList.remove('bg-blue-50');
+        statusMessage.parentElement.classList.add('bg-red-50');
+        statusMessage.classList.remove('text-blue-700');
+        statusMessage.classList.add('text-red-700');
         statusMessage.textContent = 'Processing failed. Please try again.';
-        statusMessage.className = 'text-red-700 font-medium mb-4';
+        
+        // Show error icon
+        const headerIcon = document.querySelector('.animate-spin').parentElement.parentElement;
+        headerIcon.innerHTML = `
+            <div class="relative h-20 w-20 flex items-center justify-center rounded-full bg-gradient-to-br from-red-50 to-red-100">
+                <i class="fas fa-exclamation-circle text-4xl text-red-600"></i>
+            </div>
+        `;
         
         // Add failure log
         const failureLog = document.createElement('div');
-        failureLog.className = 'flex items-start space-x-2 text-sm bg-red-50 p-2 rounded';
+        failureLog.className = 'flex items-start space-x-2 py-2 bg-red-50 rounded px-2 mt-2';
         failureLog.innerHTML = `
-            <span class="text-gray-500 w-16">${new Date().toLocaleTimeString()}</span>
-            <span class="text-red-600 w-16 uppercase text-xs font-medium">ERROR</span>
+            <span class="text-gray-400 w-20 shrink-0">${new Date().toLocaleTimeString()}</span>
+            <span class="bg-red-100 text-red-600 px-2 py-0.5 rounded text-xs font-medium uppercase w-20 text-center shrink-0">
+                <i class="fas fa-times-circle mr-1 text-xs"></i>ERROR
+            </span>
             <span class="text-red-700 flex-1 font-medium">Processing failed. Please check your file and try again.</span>
         `;
         logsContainer.appendChild(failureLog);
         logsContainer.scrollTop = logsContainer.scrollHeight;
+        
+        timeEstimate.classList.add('hidden');
     }
 };
 
@@ -193,8 +348,25 @@ eventSource.onerror = function(event) {
     console.error('EventSource failed:', event);
     eventSource.close();
     statusMessage.textContent = 'Connection lost. Please refresh the page.';
-    statusMessage.className = 'text-red-700 font-medium mb-4';
+    statusMessage.classList.remove('text-blue-700');
+    statusMessage.classList.add('text-red-700');
 };
+
+// Helper function to format time
+function formatTime(milliseconds) {
+    const seconds = Math.floor(milliseconds / 1000);
+    if (seconds < 60) {
+        return `${seconds}s`;
+    }
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    if (minutes < 60) {
+        return `${minutes}m ${remainingSeconds}s`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainingMinutes = minutes % 60;
+    return `${hours}h ${remainingMinutes}m`;
+}
 
 // Handle page unload
 window.addEventListener('beforeunload', function() {

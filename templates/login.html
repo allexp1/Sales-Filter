@@ -3,30 +3,36 @@
 {% block title %}Login - Sales Filter{% endblock %}
 
 {% block content %}
-<div class="min-h-screen flex items-center justify-center">
-    <div class="max-w-md w-full space-y-8">
-        <div>
-            <div class="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-blue-100">
-                <i class="fas fa-sign-in-alt text-blue-600 text-xl"></i>
+<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 to-gray-100">
+    <div class="max-w-md w-full">
+        <!-- Modern Card with Soft Shadow -->
+        <div class="bg-white rounded-2xl shadow-xl shadow-gray-200/50 p-8 space-y-6">
+            <!-- Logo and Title -->
+            <div class="text-center">
+                <div class="mx-auto h-16 w-16 flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100 mb-4">
+                    <i class="fas fa-sign-in-alt text-blue-600 text-2xl"></i>
+                </div>
+                <h2 class="text-3xl font-bold text-gray-900">Welcome back</h2>
+                <p class="mt-2 text-sm text-gray-600">
+                    Sign in to your account to continue
+                </p>
             </div>
-            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-                Sign in to your account
-            </h2>
-            <p class="mt-2 text-center text-sm text-gray-600">
-                Or
-                <a href="{{ url_for('signup') }}" class="font-medium text-blue-600 hover:text-blue-500">
-                    create a new account
-                </a>
-            </p>
-        </div>
-        
-        <form class="mt-8 space-y-6" method="POST">
-            {{ form.hidden_tag() }}
             
-            <div class="space-y-4">
+            <!-- Form -->
+            <form method="POST" class="space-y-5">
+                {{ form.hidden_tag() }}
+                
+                <!-- Username Field -->
                 <div>
-                    {{ form.username.label(class="block text-sm font-medium text-gray-700") }}
-                    {{ form.username(class="form-input") }}
+                    <label for="{{ form.username.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Username
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-user text-gray-400"></i>
+                        </div>
+                        {{ form.username(class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-300", placeholder="Enter your username") }}
+                    </div>
                     {% if form.username.errors %}
                         <div class="mt-1 text-sm text-red-600">
                             {% for error in form.username.errors %}
@@ -36,9 +42,17 @@
                     {% endif %}
                 </div>
                 
+                <!-- Password Field -->
                 <div>
-                    {{ form.password.label(class="block text-sm font-medium text-gray-700") }}
-                    {{ form.password(class="form-input") }}
+                    <label for="{{ form.password.id }}" class="block text-sm font-medium text-gray-700 mb-1">
+                        Password
+                    </label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="fas fa-lock text-gray-400"></i>
+                        </div>
+                        {{ form.password(class="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-xl text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 hover:border-gray-300", placeholder="Enter your password", autocomplete="current-password") }}
+                    </div>
                     {% if form.password.errors %}
                         <div class="mt-1 text-sm text-red-600">
                             {% for error in form.password.errors %}
@@ -48,18 +62,60 @@
                     {% endif %}
                 </div>
                 
+                <!-- Remember Me -->
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
-                        {{ form.remember_me(class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded") }}
-                        {{ form.remember_me.label(class="ml-2 block text-sm text-gray-900") }}
+                        {{ form.remember_me(class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded transition-all duration-200") }}
+                        <label for="{{ form.remember_me.id }}" class="ml-2 block text-sm text-gray-700 cursor-pointer">
+                            Remember me
+                        </label>
                     </div>
+                    <a href="#" class="text-sm text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                        Forgot password?
+                    </a>
                 </div>
-            </div>
+                
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200 transform hover:scale-[1.02]">
+                        <i class="fas fa-sign-in-alt mr-2"></i>
+                        Sign In
+                    </button>
+                </div>
+            </form>
             
-            <div>
-                {{ form.submit(class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500") }}
+            <!-- Sign Up Link -->
+            <div class="text-center">
+                <p class="text-sm text-gray-600">
+                    Don't have an account?
+                    <a href="{{ url_for('signup') }}" class="font-medium text-blue-600 hover:text-blue-500 transition-colors duration-200">
+                        Create one now
+                    </a>
+                </p>
             </div>
-        </form>
+        </div>
+        
+        <!-- Footer -->
+        <p class="mt-8 text-center text-xs text-gray-500">
+            © 2025 Sales Filter. All rights reserved.
+        </p>
     </div>
 </div>
+
+<style>
+/* Additional custom styles for modern look */
+.shadow-xl {
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+/* Smooth input focus transitions */
+input:focus {
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Button hover effect */
+button[type="submit"]:hover {
+    box-shadow: 0 10px 15px -3px rgba(59, 130, 246, 0.2), 0 4px 6px -2px rgba(59, 130, 246, 0.1);
+}
+</style>
 {% endblock %}

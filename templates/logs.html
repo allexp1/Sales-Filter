@@ -1,0 +1,243 @@
+{% extends "base.html" %}
+
+{% block title %}Processing Logs - Sales Filter{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Logs Header -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-2xl font-bold text-gray-900">
+                    <i class="fas fa-terminal mr-2 text-gray-600"></i>
+                    Processing Logs
+                </h1>
+                <p class="mt-2 text-gray-600">View logs from all your processing sessions</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sessions List -->
+    <div class="bg-white rounded-lg shadow">
+        <div class="px-6 py-4 border-b border-gray-200">
+            <h2 class="text-lg font-semibold text-gray-900">Recent Sessions</h2>
+        </div>
+        
+        {% if sessions %}
+        <div class="divide-y divide-gray-200">
+            {% for session in sessions %}
+            <div class="p-6 hover:bg-gray-50 transition-colors">
+                <div class="flex items-center justify-between">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-medium text-gray-900">{{ session.filename }}</h3>
+                        <div class="mt-1 flex items-center space-x-4 text-sm text-gray-600">
+                            <span>
+                                <i class="fas fa-clock mr-1"></i>
+                                {{ session.upload_time.strftime('%Y-%m-%d %H:%M:%S') }}
+                            </span>
+                            <span class="px-2 py-1 text-xs rounded-full font-medium
+                                {% if session.status == 'completed' %}bg-green-100 text-green-800
+                                {% elif session.status == 'processing' %}bg-blue-100 text-blue-800
+                                {% elif session.status == 'failed' %}bg-red-100 text-red-800
+                                {% else %}bg-gray-100 text-gray-800{% endif %}">
+                                {{ session.status.title() }}
+                            </span>
+                            <span>
+                                <i class="fas fa-list-ol mr-1"></i>
+                                {{ session.total_rows or 0 }} rows
+                            </span>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="viewLogs({{ session.id }})" class="btn-secondary text-sm">
+                            <i class="fas fa-eye mr-1"></i>
+                            View Logs
+                        </button>
+                        <a href="{{ url_for('download_logs', session_id=session.id) }}" class="btn-primary text-sm">
+                            <i class="fas fa-download mr-1"></i>
+                            Download
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Logs Container (hidden by default) -->
+                <div id="logs-{{ session.id }}" class="hidden mt-4">
+                    <div class="bg-gray-50 rounded-lg p-4">
+                        <div class="mb-3 flex items-center justify-between">
+                            <h4 class="text-sm font-medium text-gray-700">Session Logs</h4>
+                            <button onclick="copyLogs({{ session.id }})" class="text-sm text-blue-600 hover:text-blue-700">
+                                <i class="fas fa-copy mr-1"></i>
+                                Copy All
+                            </button>
+                        </div>
+                        <div id="logs-content-{{ session.id }}" class="bg-white rounded border border-gray-200 p-4 max-h-96 overflow-y-auto font-mono text-xs">
+                            <div class="text-center py-4">
+                                <i class="fas fa-spinner fa-spin text-gray-400 text-lg"></i>
+                                <p class="mt-2 text-sm text-gray-500">Loading logs...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-6 text-center text-gray-500">
+            <i class="fas fa-folder-open text-4xl mb-4"></i>
+            <p>No processing sessions found</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Logs Information -->
+    <div class="bg-blue-50 rounded-lg p-6">
+        <h3 class="text-lg font-medium text-blue-900 mb-3">
+            <i class="fas fa-info-circle mr-2"></i>About Logs
+        </h3>
+        <ul class="text-sm text-blue-800 space-y-2">
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>Logs are automatically saved for all processing sessions</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>You can view logs inline or download them as text files</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>Logs include timestamps, progress updates, and error messages</span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
+                <span>Use logs to troubleshoot processing issues or verify operations</span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script>
+let loadedLogs = {};
+
+function viewLogs(sessionId) {
+    const logsContainer = document.getElementById(`logs-${sessionId}`);
+    const logsContent = document.getElementById(`logs-content-${sessionId}`);
+    
+    if (logsContainer.classList.contains('hidden')) {
+        logsContainer.classList.remove('hidden');
+        
+        // Load logs if not already loaded
+        if (!loadedLogs[sessionId]) {
+            fetch(`/logs/${sessionId}`)
+                .then(response => response.json())
+                .then(data => {
+                    loadedLogs[sessionId] = data.logs;
+                    displayLogs(sessionId, data.logs);
+                })
+                .catch(error => {
+                    logsContent.innerHTML = `
+                        <div class="text-center py-4 text-red-600">
+                            <i class="fas fa-exclamation-circle text-lg"></i>
+                            <p class="mt-2 text-sm">Failed to load logs</p>
+                        </div>
+                    `;
+                });
+        }
+    } else {
+        logsContainer.classList.add('hidden');
+    }
+}
+
+function displayLogs(sessionId, logs) {
+    const logsContent = document.getElementById(`logs-content-${sessionId}`);
+    
+    if (logs.length === 0) {
+        logsContent.innerHTML = `
+            <div class="text-center py-4 text-gray-500">
+                <i class="fas fa-file-alt text-lg"></i>
+                <p class="mt-2 text-sm">No logs available</p>
+            </div>
+        `;
+        return;
+    }
+    
+    let html = '';
+    logs.forEach(log => {
+        const timestamp = new Date(log.timestamp).toLocaleString();
+        const levelColor = {
+            'info': 'text-blue-600',
+            'warning': 'text-yellow-600',
+            'error': 'text-red-600',
+            'success': 'text-green-600'
+        }[log.level] || 'text-gray-600';
+        
+        html += `
+            <div class="mb-2 hover:bg-gray-50 p-1 rounded">
+                <span class="text-gray-500">[${timestamp}]</span>
+                <span class="${levelColor} font-medium uppercase ml-2">[${log.level}]</span>
+                <span class="text-gray-700 ml-2">${log.message}</span>
+                <span class="text-gray-400 ml-2">(${log.progress}%)</span>
+            </div>
+        `;
+    });
+    
+    logsContent.innerHTML = html;
+}
+
+function copyLogs(sessionId) {
+    const logs = loadedLogs[sessionId];
+    if (!logs) {
+        alert('Please load the logs first');
+        return;
+    }
+    
+    let text = '';
+    logs.forEach(log => {
+        const timestamp = new Date(log.timestamp).toLocaleString();
+        text += `[${timestamp}] [${log.level.toUpperCase()}] ${log.message} (${log.progress}%)\n`;
+    });
+    
+    navigator.clipboard.writeText(text).then(() => {
+        // Show feedback
+        const button = event.target.closest('button');
+        const originalHtml = button.innerHTML;
+        button.innerHTML = '<i class="fas fa-check mr-1"></i> Copied!';
+        button.classList.add('text-green-600');
+        
+        setTimeout(() => {
+            button.innerHTML = originalHtml;
+            button.classList.remove('text-green-600');
+        }, 2000);
+    }).catch(err => {
+        alert('Failed to copy logs');
+    });
+}
+
+// Custom scrollbar for logs
+const style = document.createElement('style');
+style.textContent = `
+    #logs-content-[id] {
+        scrollbar-width: thin;
+        scrollbar-color: #9ca3af #f3f4f6;
+    }
+    
+    #logs-content-[id]::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    #logs-content-[id]::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 4px;
+    }
+    
+    #logs-content-[id]::-webkit-scrollbar-thumb {
+        background: #9ca3af;
+        border-radius: 4px;
+    }
+    
+    #logs-content-[id]::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+    }
+`;
+document.head.appendChild(style);
+</script>
+{% endblock %}

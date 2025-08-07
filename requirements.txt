@@ -1,14 +1,27 @@
-Flask==2.3.3
+# Core Flask dependencies
+Flask==2.3.2
+Flask-Login==0.6.2
 Flask-SQLAlchemy==3.0.5
-Flask-Login==0.6.3
 Flask-WTF==1.1.1
 Flask-CORS==4.0.0
 WTForms==3.0.1
-Werkzeug==2.3.7
-pandas==2.1.0
-openpyxl==3.1.2
-requests==2.31.0
-dnspython==2.4.2
-python-dateutil==2.8.2
+SQLAlchemy==2.0.19
+Werkzeug==2.3.6
 email-validator==2.0.0
-bcrypt==4.0.1
+
+# Data processing
+pandas==2.0.3
+openpyxl==3.1.2
+numpy==1.25.1
+
+# API integrations
+requests==2.31.0
+cachetools==5.3.1
+python-dotenv==1.0.0
+
+# Additional dependencies for production
+gunicorn==21.2.0
+psycopg2-binary==2.9.6
+
+# Optional: For enhanced functionality
+pyarrow==12.0.1

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Logs Dropdown</title>
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        select {
+            padding: 8px;
+            margin: 10px;
+            width: 300px;
+        }
+        button {
+            padding: 8px 16px;
+            margin: 10px;
+        }
+        .log {
+            background: #f0f0f0;
+            padding: 10px;
+            margin: 5px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Test Logs Dropdown</h2>
+    
+    <select id="sessionSelect">
+        <option value="">Select a processing session...</option>
+    </select>
+    
+    <button onclick="loadSessions()">Load Sessions</button>
+    <button onclick="testDirectAdd()">Test Direct Add</button>
+    
+    <div id="status"></div>
+    <div id="logs"></div>
+    
+    <script>
+        async function loadSessions() {
+            const sessionSelect = document.getElementById('sessionSelect');
+            const status = document.getElementById('status');
+            
+            status.innerHTML = '<div class="log">Loading sessions...</div>';
+            
+            try {
+                const response = await fetch('http://localhost:5001/history');
+                const result = await response.json();
+                
+                console.log('Response:', result);
+                status.innerHTML += `<div class="log">Got ${result.sessions.length} sessions</div>`;
+                
+                if (response.ok && result.sessions) {
+                    sessionSelect.innerHTML = '<option value="">Select a processing session...</option>';
+                    result.sessions.forEach(session => {
+                        const option = document.createElement('option');
+                        option.value = session.id;
+                        option.textContent = `${session.filename} - ${new Date(session.upload_time).toLocaleString()}`;
+                        sessionSelect.appendChild(option);
+                        status.innerHTML += `<div class="log">Added: ${session.filename}</div>`;
+                    });
+                    
+                    status.innerHTML += `<div class="log" style="color: green;">Success! Dropdown now has ${sessionSelect.options.length} options</div>`;
+                }
+            } catch (error) {
+                console.error('Error loading sessions:', error);
+                status.innerHTML += `<div class="log" style="color: red;">Error: ${error.message}</div>`;
+            }
+        }
+        
+        function testDirectAdd() {
+            const sessionSelect = document.getElementById('sessionSelect');
+            const option = document.createElement('option');
+            option.value = 'test';
+            option.textContent = 'Test Option';
+            sessionSelect.appendChild(option);
+            
+            document.getElementById('status').innerHTML = `<div class="log">Added test option. Dropdown now has ${sessionSelect.options.length} options</div>`;
+        }
+        
+        // Auto-load on page load
+        window.onload = () => {
+            loadSessions();
+        };
+    </script>
+</body>
+</html>

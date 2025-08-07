@@ -47,6 +47,71 @@
         </div>
     </div>
 
+    <!-- Date Range Filter -->
+    <div class="bg-white rounded-lg shadow p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-medium text-gray-900">
+                <i class="fas fa-filter mr-2 text-gray-600"></i>
+                Filter Results by Date Range
+            </h3>
+            <button onclick="toggleDateFilter()" class="text-sm text-blue-600 hover:text-blue-700">
+                <i class="fas fa-chevron-down mr-1" id="filter-toggle-icon"></i>
+                <span id="filter-toggle-text">Show Filter</span>
+            </button>
+        </div>
+        
+        <div id="date-filter-form" class="hidden">
+            <p class="text-sm text-gray-600 mb-4">
+                Filter the results to show only records within a specific date range. Leave fields empty to see all records.
+            </p>
+            
+            <form method="GET" action="{{ url_for('session_details', session_id=session.id) }}" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="date_from" class="block text-sm font-medium text-gray-700 mb-1">From Date</label>
+                        <input type="date" id="date_from" name="date_from"
+                               value="{{ request.args.get('date_from', '') }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    
+                    <div>
+                        <label for="date_to" class="block text-sm font-medium text-gray-700 mb-1">To Date</label>
+                        <input type="date" id="date_to" name="date_to"
+                               value="{{ request.args.get('date_to', '') }}"
+                               class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+                
+                <div class="flex space-x-4">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-filter mr-2"></i>
+                        Apply Filter
+                    </button>
+                    <a href="{{ url_for('session_details', session_id=session.id) }}" class="btn-secondary">
+                        <i class="fas fa-times mr-2"></i>
+                        Clear Filter
+                    </a>
+                </div>
+            </form>
+            
+            {% if request.args.get('date_from') or request.args.get('date_to') %}
+            <div class="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p class="text-sm text-blue-800">
+                    <i class="fas fa-info-circle mr-1"></i>
+                    Showing results filtered by:
+                    {% if request.args.get('date_from') and request.args.get('date_to') %}
+                        {{ request.args.get('date_from') }} to {{ request.args.get('date_to') }}
+                    {% elif request.args.get('date_from') %}
+                        From {{ request.args.get('date_from') }}
+                    {% else %}
+                        Until {{ request.args.get('date_to') }}
+                    {% endif %}
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
     <!-- Session Statistics -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <div class="bg-white rounded-lg shadow p-6">
@@ -180,11 +245,61 @@
             <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Domain</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Industry</th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Score</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ url_for('session_details', session_id=session.id, sort='name', order='asc' if request.args.get('sort') == 'name' and request.args.get('order', 'asc') == 'desc' else 'desc', page=request.args.get('page', 1), date_from=request.args.get('date_from'), date_to=request.args.get('date_to')) }}"
+                               class="flex items-center space-x-1 hover:text-gray-900">
+                                <span>Name</span>
+                                {% if request.args.get('sort') == 'name' %}
+                                    <i class="fas fa-sort-{{ 'up' if request.args.get('order', 'asc') == 'asc' else 'down' }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ url_for('session_details', session_id=session.id, sort='email', order='asc' if request.args.get('sort') == 'email' and request.args.get('order', 'asc') == 'desc' else 'desc', page=request.args.get('page', 1), date_from=request.args.get('date_from'), date_to=request.args.get('date_to')) }}"
+                               class="flex items-center space-x-1 hover:text-gray-900">
+                                <span>Email</span>
+                                {% if request.args.get('sort') == 'email' %}
+                                    <i class="fas fa-sort-{{ 'up' if request.args.get('order', 'asc') == 'asc' else 'down' }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ url_for('session_details', session_id=session.id, sort='domain', order='asc' if request.args.get('sort') == 'domain' and request.args.get('order', 'asc') == 'desc' else 'desc', page=request.args.get('page', 1), date_from=request.args.get('date_from'), date_to=request.args.get('date_to')) }}"
+                               class="flex items-center space-x-1 hover:text-gray-900">
+                                <span>Domain</span>
+                                {% if request.args.get('sort') == 'domain' %}
+                                    <i class="fas fa-sort-{{ 'up' if request.args.get('order', 'asc') == 'asc' else 'down' }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ url_for('session_details', session_id=session.id, sort='industry', order='asc' if request.args.get('sort') == 'industry' and request.args.get('order', 'asc') == 'desc' else 'desc', page=request.args.get('page', 1), date_from=request.args.get('date_from'), date_to=request.args.get('date_to')) }}"
+                               class="flex items-center space-x-1 hover:text-gray-900">
+                                <span>Industry</span>
+                                {% if request.args.get('sort') == 'industry' %}
+                                    <i class="fas fa-sort-{{ 'up' if request.args.get('order', 'asc') == 'asc' else 'down' }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                {% endif %}
+                            </a>
+                        </th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            <a href="{{ url_for('session_details', session_id=session.id, sort='score', order='desc' if request.args.get('sort') == 'score' and request.args.get('order', 'desc') == 'asc' else 'asc', page=request.args.get('page', 1), date_from=request.args.get('date_from'), date_to=request.args.get('date_to')) }}"
+                               class="flex items-center space-x-1 hover:text-gray-900">
+                                <span>Score</span>
+                                {% if request.args.get('sort') == 'score' %}
+                                    <i class="fas fa-sort-{{ 'up' if request.args.get('order', 'asc') == 'asc' else 'down' }}"></i>
+                                {% else %}
+                                    <i class="fas fa-sort text-gray-400"></i>
+                                {% endif %}
+                            </a>
+                        </th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
                     </tr>
                 </thead>
@@ -237,4 +352,32 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function toggleDateFilter() {
+    const filterForm = document.getElementById('date-filter-form');
+    const toggleIcon = document.getElementById('filter-toggle-icon');
+    const toggleText = document.getElementById('filter-toggle-text');
+    
+    if (filterForm.classList.contains('hidden')) {
+        filterForm.classList.remove('hidden');
+        toggleIcon.classList.remove('fa-chevron-down');
+        toggleIcon.classList.add('fa-chevron-up');
+        toggleText.textContent = 'Hide Filter';
+    } else {
+        filterForm.classList.add('hidden');
+        toggleIcon.classList.remove('fa-chevron-up');
+        toggleIcon.classList.add('fa-chevron-down');
+        toggleText.textContent = 'Show Filter';
+    }
+}
+
+// Show filter if there are active filters
+window.addEventListener('DOMContentLoaded', function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has('date_from') || urlParams.has('date_to')) {
+        toggleDateFilter();
+    }
+});
+</script>
 {% endblock %}

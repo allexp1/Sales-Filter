@@ -17,7 +17,7 @@
 
     <!-- Upload Form -->
     <div class="bg-white rounded-lg shadow p-6">
-        <form method="POST" enctype="multipart/form-data" class="space-y-6">
+        <form method="POST" action="{{ url_for('upload') }}" enctype="multipart/form-data" class="space-y-6" id="upload-form">
             {{ form.hidden_tag() }}
             
             <!-- File Upload -->
@@ -27,7 +27,7 @@
                     <div class="space-y-1 text-center">
                         <i class="fas fa-cloud-upload-alt text-gray-400 text-3xl"></i>
                         <div class="flex text-sm text-gray-600">
-                            <label for="{{ form.file.id }}" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
+                            <label for="file-upload" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500">
                                 <span>Upload a file</span>
                                 {{ form.file(class="sr-only", id="file-upload", onchange="updateFileName(this)") }}
                             </label>
@@ -45,44 +45,23 @@
                     </div>
                 {% endif %}
             </div>
-
-            <!-- Date Range Filter -->
-            <div class="border-t pt-6">
-                <h3 class="text-lg font-medium text-gray-900 mb-4">Date Range Filter (Optional)</h3>
-                <p class="text-sm text-gray-600 mb-4">
-                    Filter records by date range. If specified, only records within this range will be processed.
-                </p>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                        {{ form.date_from.label(class="block text-sm font-medium text-gray-700") }}
-                        {{ form.date_from(class="form-input") }}
-                        {% if form.date_from.errors %}
-                            <div class="mt-1 text-sm text-red-600">
-                                {% for error in form.date_from.errors %}
-                                    <p>{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
-                    
-                    <div>
-                        {{ form.date_to.label(class="block text-sm font-medium text-gray-700") }}
-                        {{ form.date_to(class="form-input") }}
-                        {% if form.date_to.errors %}
-                            <div class="mt-1 text-sm text-red-600">
-                                {% for error in form.date_to.errors %}
-                                    <p>{{ error }}</p>
-                                {% endfor %}
-                            </div>
-                        {% endif %}
-                    </div>
+            
+            <!-- Error Message Display -->
+            <div id="error-message" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                <div class="flex">
+                    <i class="fas fa-exclamation-circle mr-2"></i>
+                    <span id="error-text"></span>
                 </div>
             </div>
 
             <!-- Submit Button -->
             <div class="border-t pt-6">
-                {{ form.submit(class="w-full btn-primary text-center") }}
+                <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-all duration-200 transform hover:scale-105 shadow-lg flex items-center justify-center" id="submit-btn">
+                    <span id="btn-text" class="text-lg">Upload & Process</span>
+                    <span id="btn-spinner" class="hidden ml-2">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                </button>
             </div>
         </form>
     </div>
@@ -99,7 +78,11 @@
             </li>
             <li class="flex items-start">
                 <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
-                <span>Required columns: <code class="bg-blue-100 px-1 rounded">name</code>, <code class="bg-blue-100 px-1 rounded">email</code>, <code class="bg-blue-100 px-1 rounded">date</code></span>
+                <span>Required columns: <code class="bg-blue-100 px-1 rounded">name</code>, <code class="bg-blue-100 px-1 rounded">email</code></span>
+            </li>
+            <li class="flex items-start">
+                <i class="fas fa-info-circle text-blue-600 mr-2 mt-0.5"></i>
+                <span>Optional column: <code class="bg-blue-100 px-1 rounded">date</code> (for date filtering)</span>
             </li>
             <li class="flex items-start">
                 <i class="fas fa-check text-blue-600 mr-2 mt-0.5"></i>
@@ -176,5 +159,91 @@ dropZone.addEventListener('drop', (e) => {
         updateFileName(fileInput);
     }
 });
+
+// Form submission with error handling
+const uploadForm = document.getElementById('upload-form');
+const submitBtn = document.getElementById('submit-btn');
+const btnText = document.getElementById('btn-text');
+const btnSpinner = document.getElementById('btn-spinner');
+const errorMessage = document.getElementById('error-message');
+const errorText = document.getElementById('error-text');
+
+uploadForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    // Reset error message
+    errorMessage.classList.add('hidden');
+    
+    // Check if file is selected
+    if (!fileInput.files || fileInput.files.length === 0) {
+        showError('Please select a file to upload');
+        return;
+    }
+    
+    // Disable button and show spinner
+    submitBtn.disabled = true;
+    btnText.textContent = 'Uploading...';
+    btnSpinner.classList.remove('hidden');
+    
+    const formData = new FormData(uploadForm);
+    
+    try {
+        const response = await fetch(uploadForm.action, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.redirected) {
+            // Follow redirect on success
+            window.location.href = response.url;
+        } else if (!response.ok) {
+            // Handle HTTP errors
+            const text = await response.text();
+            let errorMsg = 'Upload failed. Please try again.';
+            
+            // Try to parse error message from response
+            try {
+                const data = JSON.parse(text);
+                if (data.error) {
+                    errorMsg = data.error;
+                    // Convert form validation errors to user-friendly messages
+                    if (errorMsg.includes('Only .xlsx files are allowed')) {
+                        errorMsg = 'Upload must be an .xlsx file.';
+                    } else if (errorMsg.includes('This field is required')) {
+                        errorMsg = 'Please select a file to upload.';
+                    }
+                }
+            } catch (e) {
+                // If response is HTML or plain text, check for common errors
+                if (text.includes('File size exceeds maximum')) {
+                    errorMsg = 'File size exceeds maximum limit of 16MB';
+                } else if (text.includes('Invalid file type')) {
+                    errorMsg = 'Upload must be an .xlsx file.';
+                } else if (text.includes('Missing required columns')) {
+                    errorMsg = 'Missing required columns. Please ensure your file has name and email columns.';
+                }
+            }
+            
+            showError(errorMsg);
+        }
+    } catch (error) {
+        // Handle network errors
+        showError('Network error. Please check your connection and try again.');
+        console.error('Upload error:', error);
+    } finally {
+        // Re-enable button and hide spinner
+        submitBtn.disabled = false;
+        btnText.textContent = 'Upload & Process';
+        btnSpinner.classList.add('hidden');
+    }
+});
+
+function showError(message) {
+    errorText.textContent = message;
+    errorMessage.classList.remove('hidden');
+    
+    // Scroll to error message
+    errorMessage.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
 </script>
 {% endblock %}

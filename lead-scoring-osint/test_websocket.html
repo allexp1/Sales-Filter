@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lead Scoring OSINT - WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        #status {
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            font-weight: bold;
+        }
+        #status.connected {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        #status.disconnected {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        #messages {
+            border: 1px solid #ddd;
+            padding: 10px;
+            height: 400px;
+            overflow-y: auto;
+            background-color: #f9f9f9;
+        }
+        .message {
+            padding: 5px;
+            margin: 5px 0;
+            border-left: 3px solid #007bff;
+            background-color: white;
+        }
+        .error {
+            border-left-color: #dc3545;
+        }
+        .success {
+            border-left-color: #28a745;
+        }
+        .controls {
+            margin: 20px 0;
+        }
+        input, button {
+            padding: 8px 12px;
+            margin: 5px;
+        }
+        input {
+            width: 300px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lead Scoring OSINT - WebSocket Test</h1>
+    
+    <div id="status" class="disconnected">Disconnected</div>
+    
+    <div class="controls">
+        <input type="text" id="token" placeholder="Enter JWT token">
+        <button onclick="connect()">Connect</button>
+        <button onclick="disconnect()">Disconnect</button>
+    </div>
+    
+    <div class="controls">
+        <input type="text" id="jobId" placeholder="Enter Job ID to monitor">
+        <button onclick="subscribeToJob()">Subscribe to Job</button>
+    </div>
+    
+    <h3>Messages:</h3>
+    <div id="messages"></div>
+    
+    <script>
+        let socket = null;
+        
+        function connect() {
+            const token = document.getElementById('token').value;
+            if (!token) {
+                alert('Please enter a JWT token');
+                return;
+            }
+            
+            socket = io('http://localhost:3010', {
+                auth: { token }
+            });
+            
+            socket.on('connect', () => {
+                document.getElementById('status').textContent = 'Connected';
+                document.getElementById('status').className = 'connected';
+                addMessage('Connected to WebSocket server', 'success');
+            });
+            
+            socket.on('disconnect', () => {
+                document.getElementById('status').textContent = 'Disconnected';
+                document.getElementById('status').className = 'disconnected';
+                addMessage('Disconnected from server', 'error');
+            });
+            
+            socket.on('error', (error) => {
+                addMessage(`Error: ${error}`, 'error');
+            });
+            
+            socket.on('job:progress', (data) => {
+                addMessage(`Progress: ${data.processed}/${data.total} (${data.progress}%)`, 'info');
+            });
+            
+            socket.on('job:log', (data) => {
+                addMessage(`Log: ${data.message}`, 'info');
+            });
+            
+            socket.on('job:complete', (data) => {
+                addMessage(`Job completed! Status: ${data.status}`, 'success');
+            });
+            
+            socket.on('job:error', (data) => {
+                addMessage(`Job error: ${data.error}`, 'error');
+            });
+        }
+        
+        function disconnect() {
+            if (socket) {
+                socket.disconnect();
+                socket = null;
+            }
+        }
+        
+        function subscribeToJob() {
+            const jobId = document.getElementById('jobId').value;
+            if (!jobId) {
+                alert('Please enter a Job ID');
+                return;
+            }
+            
+            if (!socket || !socket.connected) {
+                alert('Please connect first');
+                return;
+            }
+            
+            socket.emit('subscribe:job', jobId);
+            addMessage(`Subscribed to job: ${jobId}`, 'success');
+        }
+        
+        function addMessage(msg, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `message ${type}`;
+            div.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+            
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.appendChild(div);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+        
+        // Auto-populate token if provided in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const tokenParam = urlParams.get('token');
+        if (tokenParam) {
+            document.getElementById('token').value = tokenParam;
+        }
+    </script>
+</body>
+</html>

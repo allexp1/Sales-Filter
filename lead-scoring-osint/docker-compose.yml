@@ -1,0 +1,94 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lead-scoring-backend
+    ports:
+      - "3010:3010"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - PORT=3010
+      - DB_PATH=/app/data/database.sqlite
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+      - /app/node_modules
+    depends_on:
+      - redis
+      - mailhog
+    command: npm run dev
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: lead-scoring-frontend
+    ports:
+      - "3011:3000"
+    environment:
+      - VITE_API_URL=http://localhost:3010/api
+      - VITE_WS_URL=http://localhost:3010
+      - VITE_STRIPE_PUBLISHABLE_KEY=pk_test_51234567890
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: npm start
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: lead-scoring-worker
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=development
+      - DB_PATH=/app/data/database.sqlite
+      - REDIS_URL=redis://redis:6379
+    volumes:
+      - ./backend:/app
+      - ./data:/app/data
+      - /app/node_modules
+    depends_on:
+      - redis
+    command: npm run worker
+
+  redis:
+    image: redis:7-alpine
+    container_name: lead-scoring-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  mailhog:
+    image: mailhog/mailhog:v1.0.1
+    container_name: lead-scoring-mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+    environment:
+      - MH_STORAGE=maildir
+      - MH_MAILDIR_PATH=/maildir
+
+  nginx:
+    build:
+      context: ./nginx
+      dockerfile: Dockerfile
+    container_name: lead-scoring-nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - backend
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+
+volumes:
+  redis_data:
