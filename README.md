@@ -1,6 +1,6 @@
-# Sales Filter v0.7
+# Sales Filter v0.8
 
-A modern web application for scoring and filtering sales leads based on email domain analysis and industry classification, now with GitHub verification, enhanced free email detection, and sanctions compliance.
+A modern web application for scoring and filtering sales leads based on email domain analysis and industry classification, now with advanced email intelligence, comprehensive name analysis, and sophisticated OSINT lead scoring engine.
 
 ## Features
 
@@ -12,11 +12,50 @@ A modern web application for scoring and filtering sales leads based on email do
 - **Business Domain Focus**: Statistics excluding free email providers
 - **Modern UI**: Responsive design with Tailwind CSS
 - **File Management**: Permanent storage for processed results
+- **Advanced Email Intelligence** (v0.8): Sophisticated email pattern analysis and validation
+- **Name-Email Consistency** (v0.8): Comprehensive consistency validation and matching
+- **Executive Detection** (v0.8): Automatic identification of decision makers and executives
+- **Industry Vertical Detection** (v0.8): Specialized telecom and technology sector targeting
+- **B2B/B2C Classification** (v0.8): Intelligent contact type classification
+- **Geographic Intelligence** (v0.8): Country-specific scoring and telecom-friendly regions
+- **Suspicious Pattern Detection** (v0.8): Advanced identification of generated/fake accounts
 - **GitHub Verification** (v0.7): Developer profile detection and verification
 - **Enhanced Free Email Detection** (v0.7): Comprehensive wildcard domain matching
 - **Sanctions Compliance** (v0.7): Automatic penalties for sanctioned domains
 - **Company Intelligence** (v0.6): Real-time company enrichment via OpenCorporates and Clearbit
 - **Phone Lookup** (v0.6): Automated phone number discovery and validation via Twilio
+
+## What's New in v0.8
+
+### Advanced Email Intelligence Engine
+- **Email Pattern Analysis**: Sophisticated scoring based on professional email formats (firstname.lastname, f.lastname)
+- **Executive Role Detection**: Automatic identification of CEO, CTO, VP, Director, and other executive titles
+- **Technical Professional Scoring**: Enhanced detection of developers, engineers, and technical roles
+- **B2B vs B2C Classification**: Intelligent distinction between business and consumer contacts
+- **Suspicious Account Detection**: Advanced identification of generated, fake, or bulk email accounts
+
+### Enhanced Name & Consistency Analysis
+- **Name-Email Matching**: Comprehensive validation of name-email consistency with multiple matching patterns
+- **Professional Title Recognition**: Detection of Dr., Prof., and other professional designations
+- **Birth Year Detection**: Identification of personal patterns that indicate consumer accounts
+- **Character Diversity Analysis**: Detection of low-quality generated usernames
+
+### Geographic & Industry Intelligence
+- **Country-Specific Scoring**: Premium scoring for telecom-friendly regions (Germany, Netherlands, Switzerland)
+- **Industry Vertical Detection**: Specialized scoring for telecom, technology, financial services, and healthcare
+- **Sanctioned Region Penalties**: Enhanced penalties for restricted geographic domains
+- **TLD Intelligence**: Advanced scoring based on country-code and industry-specific top-level domains
+
+### Expanded Database Schema
+- **Intelligence Scoring Fields**: Granular tracking of all intelligence components
+- **Industry Detection**: Automatic industry classification and scoring
+- **Advanced Metrics**: Comprehensive tracking of all scoring factors
+- **Enhanced Export**: Detailed intelligence data in processed results
+
+### Score Range Expansion
+- **Extended Range**: Scoring now ranges from -50 to +150 (expanded from +100)
+- **Granular Intelligence**: Multiple intelligence factors contribute to final score
+- **Detailed Reasoning**: Comprehensive breakdown of all scoring factors
 
 ## What's New in v0.7
 
@@ -120,9 +159,10 @@ cp .env.example .env
 - **Phone Validation**: +5 points for valid phone numbers
 - **Company Status**: -20 points for inactive/dissolved companies
 
-### Score Range
-- Final scores are capped between -50 to +100 points (v0.7 updated range)
-- Scores ≥70: High quality leads
+### Score Range (v0.8 Updated)
+- Final scores are capped between -50 to +150 points (expanded range for advanced intelligence)
+- Scores ≥100: Premium quality leads (high intelligence scores)
+- Scores 70-99: High quality leads
 - Scores 40-69: Medium quality leads  
 - Scores <40: Low quality leads
 - Scores <0: Sanctioned or problematic leads
@@ -159,10 +199,15 @@ export DATABASE_URL="sqlite:///sales_filter_v06.db"
 
 ### Step 5: Run the Application
 
-For v0.7 with GitHub verification and enhanced features:
+For v0.8 with advanced intelligence and OSINT features:
 ```bash
 python app.py
 # or
+python app_v08.py
+```
+
+For v0.7 with GitHub verification and enhanced features:
+```bash
 python app_v07.py
 ```
 
@@ -176,7 +221,8 @@ For v0.5 without API integrations:
 python app_v05.py
 ```
 
-The v0.7 application will be available at `http://localhost:5001`
+The v0.8 application will be available at `http://localhost:5001`
+The v0.7 application will be available at `http://localhost:5004`
 The v0.6 application will be available at `http://localhost:5003`
 The v0.5 application will be available at `http://localhost:5002`
 
@@ -188,17 +234,28 @@ Your Excel file must contain the following columns:
 - **email**: Email address
 - **date**: Date in YYYY-MM-DD or MM/DD/YYYY format (optional in v0.6)
 
-### v0.7 Output Columns
+### v0.8 Output Columns
 The processed file will include all original columns plus:
-- **score**: Lead quality score (-50 to 100)
+- **score**: Lead quality score (-50 to 150)
 - **domain**: Extracted email domain
 - **reason**: Detailed scoring breakdown
+- **detected_industry**: Automatically detected industry vertical
+- **domain_type**: Classification (free/corporate/enterprise/telecom)
 - **domain_alive**: Whether domain is accessible
 - **linkedin_verified**: LinkedIn profile found
 - **facebook_verified**: Facebook profile found  
 - **github_verified**: GitHub profile found
 - **github_match**: Exact GitHub profile match
+- **email_pattern_score**: Email structure intelligence score
+- **consistency_score**: Name-email consistency score
+- **executive_score**: Executive/decision maker score
+- **technical_score**: Technical professional score
+- **b2b_score**: B2B vs B2C classification score
+- **suspicious_score**: Suspicious pattern detection score
+- **geographic_score**: Geographic intelligence score
+- **industry_score**: Industry vertical score
 - **verification_details**: JSON with detailed verification info
+- **intelligence_data**: JSON with advanced intelligence analysis
 
 ### v0.6 Legacy Columns
 - **domain_type**: Classification (free/corporate/enterprise/telecom)
@@ -237,13 +294,21 @@ Bob Johnson   | bob@enterprise.com       | 2024-01-17
 - Download previous results
 - View detailed statistics and insights
 
-### 5. Check Enhanced Features (v0.7)
+### 5. Check Advanced Features (v0.8)
+- Advanced email intelligence automatically analyzes all patterns
+- Industry vertical detection runs for all domains
+- Executive and technical role detection works seamlessly
+- B2B/B2C classification applied to all contacts
+- Geographic intelligence scoring for all regions
+- Suspicious pattern detection prevents fake accounts
+
+### 6. Check Enhanced Features (v0.7)
 - GitHub verification automatically runs during processing
 - Sanctions compliance automatically applied
 - Enhanced free email detection works seamlessly
 - Fixed download functionality works immediately after processing
 
-### 6. Check API Status (v0.6 features)
+### 7. Check API Status (v0.6 features)
 - Visit `/api-status` to verify API configuration
 - Shows which APIs are configured and available
 
@@ -370,7 +435,8 @@ server {
 ### Project Structure
 ```
 Sales-Filter/
-├── app.py                  # Current working version (v0.7)
+├── app.py                  # Current working version (v0.8)
+├── app_v08.py              # Version 0.8 backup
 ├── app_v07.py              # Version 0.7 backup
 ├── app_v06.py              # Version 0.6 with API integrations
 ├── app_v05.py              # Version 0.5 without APIs
@@ -466,7 +532,7 @@ The system includes built-in protection for API rate limits:
 Run with debug enabled:
 ```bash
 export FLASK_DEBUG=1
-python app.py  # v0.7
+python app.py  # v0.8
 ```
 
 ### API Troubleshooting (v0.6/v0.7)
@@ -491,7 +557,18 @@ This project is proprietary software. All rights reserved.
 
 ## Version History
 
-### v0.7 (Current)
+### v0.8 (Current)
+- Advanced email intelligence with pattern analysis and executive detection
+- Name-email consistency validation with multiple matching algorithms
+- Industry vertical detection with specialized telecom targeting
+- B2B/B2C classification and technical professional identification
+- Geographic intelligence scoring for telecom-friendly regions
+- Suspicious pattern detection for generated/fake accounts
+- Expanded database schema with comprehensive intelligence fields
+- Score range expanded to -50 to +150 for granular intelligence scoring
+- Comprehensive OSINT lead scoring engine with real-time processing
+
+### v0.7
 - GitHub profile verification and developer identification
 - Enhanced free email detection with wildcard support
 - Russian domain sanctions compliance (-50 points for .ru domains)
